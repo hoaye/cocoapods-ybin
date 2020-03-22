@@ -1,6 +1,8 @@
+[![Gem Version](https://badge.fury.io/rb/cocoapods-ybin.svg)](https://badge.fury.io/rb/cocoapods-ybin)
+
 # cocoapods-ybin
 
-A description of cocoapods-ybin.
+The binary library and source code mapping, to achieve breakpoints automatically jump into the corresponding source code for debugging the application.
 
 ## Installation
 
@@ -8,4 +10,6 @@ A description of cocoapods-ybin.
 
 ## Usage
 
-    $ pod spec ybin POD_NAME
+    $ pod ybin --help
+
+
