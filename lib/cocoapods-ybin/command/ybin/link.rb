@@ -7,7 +7,7 @@ module Pod
         self.summary = '二进制库源码映射工具'
 
         self.description = <<-DESC
-          二进制库源码映射工具. 作者: houmanager@qq.com
+          二进制库源码映射工具.
         DESC
 
         self.arguments = [
@@ -216,10 +216,14 @@ module Pod
         # 查询映射列表
         def linked_list
 
-          records = JSON.parse(File.read(source_record_file_path))
-          if records.count > 0
-            records.each.with_index(1) do |record, index|
-              UI.puts "#{index}. #{record["lib_name"]}(#{record["lib_version"]}) ".green "Source: #{record["source_path"]}".yellow
+          if File.exist?(source_record_file_path)
+            records = JSON.parse(File.read(source_record_file_path))
+            if records.count > 0
+              records.each.with_index(1) do |record, index|
+                UI.puts "#{index}. #{record["lib_name"]}(#{record["lib_version"]}) ".green "Source: #{record["source_path"]}".yellow
+              end
+            else
+              UI.puts "无记录".green
             end
           else
             UI.puts "无记录".green
@@ -233,11 +237,13 @@ module Pod
         def linked_list_contain(lib_name)
 
           is_contain_lib = false
-          records = JSON.parse(File.read(source_record_file_path))
-          records.each.with_index(1) do |record, index|
-            if record["lib_name"] == lib_name
-              is_contain_lib = true
-              break
+          if File.exist?(source_record_file_path)
+            records = JSON.parse(File.read(source_record_file_path))
+            records.each.with_index(1) do |record, index|
+              if record["lib_name"] == lib_name
+                is_contain_lib = true
+                break
+              end
             end
           end
           is_contain_lib
@@ -339,7 +345,7 @@ module Pod
           podfile_lock = File.join(Pathname.pwd, "Podfile.lock")
           if File.exist?(podfile_lock)
           else
-            UI.puts "[!] 未匹配到 Podfile.lock 文件, 无法获取 Pod 管理信息".red
+            UI.puts "\n[!] 未匹配到 Podfile.lock 文件, 无法获取 Pod 管理信息\n".red
             return
           end
           @lockfile ||= Lockfile.from_file(Pathname.new(podfile_lock))
@@ -391,12 +397,15 @@ module Pod
         end
 
         def get_lib_linked_path(lib_name)
-          records = JSON.parse(File.read(source_record_file_path))
+
           lib_linked_path = ""
-          records.each do |record|
-            if record["lib_name"] == lib_name
-              lib_linked_path = record["source_path"]
-              break
+          if File.exist?(source_record_file_path)
+            records = JSON.parse(File.read(source_record_file_path))
+            records.each do |record|
+              if record["lib_name"] == lib_name
+                lib_linked_path = record["source_path"]
+                break
+              end
             end
           end
           lib_linked_path
