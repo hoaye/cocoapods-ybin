@@ -208,7 +208,7 @@ module Pod
               end
               UI.puts "\n已全部移除\n".green
             else
-              UI.puts "无记录\n".green
+              UI.puts "\n无记录\n".green
             end
           end
         end
@@ -223,10 +223,10 @@ module Pod
                 UI.puts "#{index}. #{record["lib_name"]}(#{record["lib_version"]}) ".green "Source: #{record["source_path"]}".yellow
               end
             else
-              UI.puts "无记录".green
+              UI.puts "\n无记录".green
             end
           else
-            UI.puts "无记录".green
+            UI.puts "\n无记录".green
           end
           print "\n"
         end
