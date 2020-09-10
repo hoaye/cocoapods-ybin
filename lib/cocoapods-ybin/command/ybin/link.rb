@@ -11,7 +11,7 @@ module Pod
         DESC
 
         self.arguments = [
-              CLAide::Argument.new('NAME', false)
+              CLAide::Argument.new('LIB_NAME', false)
         ]
         def self.options
           [
@@ -74,11 +74,11 @@ module Pod
         def linkLibSource
 
           if @names.nil?
-            UI.puts "[Error] 请输入需要映射的组件库. 示例: $ pod ybin foo\n".red
+            UI.puts "[Error] 请输入需要映射的组件库. 示例: $ pod ybin link foo\n".red
             return
           else
             if @names.count > 1
-              UI.puts "[Error] 不支持一次映射多个源码. 示例: $ pod ybin foo\n".red
+              UI.puts "[Error] 不支持一次映射多个源码. 示例: $ pod ybin link foo\n".red
               return
             end
           end
@@ -101,8 +101,16 @@ module Pod
           config = config_with_asker
           lib_path = config["libPath"]
           sourcePath = config["sourcePath"]
+          lib_name = source_lib_name(lib_path)
 
-          if lib_path == "" || !File.exist?(lib_path)
+          lib_real_path = ""
+          if Pathname.new(lib_path).extname == ".framework"
+            lib_real_path = "#{lib_path}/#{lib_name}"
+          elsif Pathname.new(lib_path).extname == ".a"
+            lib_real_path = lib_path
+          end
+
+          if lib_real_path == "" || !File.exist?(lib_real_path)
             UI.puts "\n[Error] 二进制文件不存在, 请检查文件位置!\n".red
             return
           end
@@ -112,23 +120,25 @@ module Pod
             return
           end
 
-          lib_name = source_lib_name(lib_path)
-          link_source_code(lib_path, sourcePath, lib_name)
+          link_source_code(lib_real_path, sourcePath, lib_name)
         end
 
         def link_source_code(lib_path, sourcePath, lib_name)
 
           comp_dir_path = `dwarfdump "#{lib_path}" | grep "AT_comp_dir" | head -1 | cut -d \\" -f2`
           if comp_dir_path == nil || comp_dir_path == ""
-            UI.puts "\n[Error] #{lib_name} 不支持映射源码库\n".red
+            UI.puts "\n[Error] #{lib_name} 不支持映射源码\n".red
             return
           end
 
           lib_debug_path = comp_dir_path.chomp.strip
-          if File.exist?(lib_debug_path) || File.directory?(lib_debug_path) || File.symlink?(lib_debug_path)
-            print "源码文件: #{lib_debug_path} 已存在，无法源码映射，防止误删请检查:"
-            UI.puts "\n1、源码已映射，无需重复映射 \n2、开发源码(无需映射，即可调试) \n3、其他重复文件, 请手动移动/移除\n".red
-
+          if File.exist?(lib_debug_path) || File.directory?(lib_debug_path)
+            if File.symlink?(lib_debug_path)
+              print "源码映射已存在, 无法重复映射，请删除后重新映射: #{lib_debug_path}"
+            else
+              print "源码映射目录已存在, 请检查 #{lib_debug_path} 目录(可能存在以下情况):"
+              UI.puts "\n1、开发源码(无需映射，即可调试) \n2、其他重复文件, 请手动移动/移除\n".red
+            end
           else
 
             begin
@@ -144,11 +154,7 @@ module Pod
             end
 
             FileUtils.rm_rf(lib_debug_path)
-            if Pathname.new(lib_path).extname == ".a"
-              `ln -s #{sourcePath} #{lib_debug_path}`
-            else
-              `ln -s #{sourcePath} #{lib_debug_path}/#{lib_name}`
-            end
+            File.symlink(sourcePath, lib_debug_path)
             check_linked(lib_path, lib_debug_path, lib_name)
           end
         end
@@ -178,7 +184,7 @@ module Pod
             if lib_linked_path.nil? || lib_linked_path == ""
               UI.puts "[Error] #{name} 的映射不存在, 无需移除".red
             else
-              if File.exist?(lib_linked_path)
+              if File.exist?(lib_linked_path) && File.symlink?(lib_linked_path)
                 FileUtils.rm_rf(lib_linked_path)
                 removeLinkedFileRecord(name)
                 UI.puts "#{name} 成功移除".green
@@ -200,7 +206,7 @@ module Pod
               records.each.with_index(0) do |record, index|
                 lib_linked_path = record["source_path"]
                 lib_name = record["lib_name"]
-                if File.exist?(lib_linked_path)
+                if File.exist?(lib_linked_path) && File.symlink?(lib_linked_path)
                   FileUtils.rm_rf(lib_linked_path)
                   removeLinkedFileRecord(lib_name)
                   UI.puts "#{lib_name} removing...".green
@@ -220,7 +226,9 @@ module Pod
             records = JSON.parse(File.read(source_record_file_path))
             if records.count > 0
               records.each.with_index(1) do |record, index|
-                UI.puts "#{index}. #{record["lib_name"]}(#{record["lib_version"]}) ".green "Source: #{record["source_path"]}".yellow
+                lib_version_s = record["lib_version"]
+                lib_version_s = (lib_version_s == nil || lib_version_s == '') ? "" : "(#{lib_version_s})"
+                UI.puts "#{index}. #{record["lib_name"]} #{lib_version_s} ".green "Source: #{record["source_path"]}".yellow
               end
             else
               UI.puts "\n无记录".green
@@ -263,8 +271,13 @@ module Pod
         end
 
         def source_lib_name(filePath)
-          file_name = File.basename(filePath, ".a")
-          file_name = file_name[3..file_name.length]
+          file_name = ""
+          if Pathname.new(filePath).extname == ".framework"
+            file_name = File.basename(filePath, ".framework")
+          elsif Pathname.new(filePath).extname == ".a"
+            file_name = File.basename(filePath, ".a")
+            file_name = file_name[3..file_name.length]
+          end
           file_name
         end
 
@@ -350,7 +363,7 @@ module Pod
           end
           @lockfile ||= Lockfile.from_file(Pathname.new(podfile_lock))
 
-          UI.section "Analyzer Podfile" do
+          UI.section "ybin analyzer" do
             analyzer = Pod::Installer::Analyzer.new(config.sandbox, config.podfile, @lockfile)
             @analysis_result = analyzer.analyze
             @aggregate_targets = @analysis_result.targets
@@ -413,8 +426,8 @@ module Pod
 
         def template_source
           {
-            'libPath' => { question: '1/2 请输入映射源码的二进制库.a 的路径(如：/Users/xxx/Desktop/Workspace/xxx.a)' },
-            'sourcePath' => { question: '2/2 源码位置(注意版本是否匹配)' },
+            'libPath' => { question: '1/2 请输入静态二进制库的路径(如：/Users/xxx/Workspace/xxx.a 或 /Users/xxx/Workspace/xxx.framework)' },
+            'sourcePath' => { question: '2/2 源码路径(注意: 版本是否匹配)' },
           }
         end
 
