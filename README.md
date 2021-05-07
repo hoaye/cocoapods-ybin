@@ -18,7 +18,7 @@
 
 # 二、先睹为快
 
-**cocoapods-ybin-demo** 示例效果视频，[示例代码地址](https://github.com/monetking/cocoapods-ybin-demo.git)
+**cocoapods-ybin-demo** 示例效果视频，[示例代码地址](https://github.com/bytesking/cocoapods-ybin-demo.git)
 
 <video id="video" width="756" height="426" controls="" preload="none" poster="https://img.58cdn.com.cn/dist/rn/course/ybin_demo_cover.png">
       <source id="mp4" src="https://img.58cdn.com.cn/dist/rn/course/ybin_demo_small.mp4" type="video/mp4">
@@ -57,7 +57,7 @@ $ pod --help
 # 四、使用教程
 
 
-打开示例项目 **ocoapods-ybin-demo** [示例代码](https://github.com/monetking/cocoapods-ybin-demo.git) 的 Podfile 目录。示例项目使用了 **Bundler** 对 pod 的版本进行了控制，实际项目根据所需选择是否采用，与本插件无关联，请酌情选择。
+打开示例项目 **ocoapods-ybin-demo** [示例代码](https://github.com/bytesking/cocoapods-ybin-demo.git) 的 Podfile 目录。示例项目使用了 **Bundler** 对 pod 的版本进行了控制，实际项目根据所需选择是否采用，与本插件无关联，请酌情选择。
 
 ## 4.1 执行二进制和源码映射指令
 
@@ -106,5 +106,3 @@ $ pod ybin link --lib-version
 - 如果在使用过程中遇到Bug，希望您能Issues我，谢谢(或者尝试下载使用最新版本看看Bug修复没有)
 - 如果在使用过程中发现功能不够用，希望你能Issues我，非常想为这个工具增加更多好用的功能，谢谢
 - 如果你想为cocoapods-ybin输出代码，请拼命Pull Requests我
-
-

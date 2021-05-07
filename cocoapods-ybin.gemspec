@@ -6,11 +6,11 @@ require 'cocoapods-ybin/gem_version.rb'
 Gem::Specification.new do |spec|
   spec.name          = 'cocoapods-ybin'
   spec.version       = CocoapodsYbin::VERSION
-  spec.authors       = ['monetking']
-  spec.email         = ['houmanager@qq.com']
+  spec.authors       = ['bytesking']
+  spec.email         = ['bytesking@qq.com']
   spec.description   = %q{cocoapods-ybin is a plug-in for link source and binary.}
   spec.summary       = %q{link source and binary.}
-  spec.homepage      = 'https://github.com/monetking/cocoapods-ybin.git'
+  spec.homepage      = 'https://github.com/bytesking/cocoapods-ybin.git'
   spec.license       = 'MIT'
 
   # spec.files         = `git ls-files`.split($/)
